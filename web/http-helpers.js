@@ -13,9 +13,16 @@ exports.headers = {
 };
 
 
-exports.notFound = function(res) {
+
+
+exports.redirect = function(res, asset) {
+  res.writeHead(301, {location: asset});
+  res.end();
+};
+
+exports.notFound = function(res, asset) {
   res.writeHead(404);
-  res.end('Not Found');
+  res.end();
 };
 
 exports.notImplemented = function(res) {
@@ -27,15 +34,33 @@ exports.serveAssets = function(res, asset, callback) {
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...),
   // css, or anything that doesn't change often.)
-  fs.readFile(exports.docRoot + pathname, (err, contents) => {
-    if (err) {
-      exports.notFound(res);
-    } else {
-      res.writeHead(200);
-      res.end(contents);
-    }
-    callback();
+  fs.readFile(asset, (err, contents) => {
+    callback(res, err, contents);
   });
 };
 
-// As you progress, keep thinking about what helper functions you can put here!
+// POST
+// if err
+  // add to sites.txt
+  // redirect to loading
+// else
+  // redirect to archived site
+
+// GET
+// if err
+  // return 404
+// else
+  // serve contents
+var fileExts = new Set([
+  '.html',
+  '.css',
+  '.js',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.png'
+]);
+
+exports.isValidFileName = function(file) {
+  return fileExts.has(path.parse(file).ext); 
+};
