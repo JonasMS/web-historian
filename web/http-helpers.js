@@ -17,7 +17,7 @@ exports.headers = {
 
 
 exports.redirect = function(res, asset) {
-  res.writeHead(301, {location: asset});
+  res.writeHead(302, {location: asset});
   res.end();
 };
 
