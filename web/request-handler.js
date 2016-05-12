@@ -18,10 +18,10 @@ exports.handleRequest = function (req, res) {
     } else { //GET (public | archive)
       if (helpers.isValidFileName(pathname)) {
         // serve from public
-        helpers.serveAssets(res, 'web/public' + pathname, getCallback);
+        fs.readFile('web/public' + pathname, (err, contents) => { getCallback(res, err, contents); });
       } else {
         // serve from archive
-        helpers.serveAssets(res, 'test/testdata/sites' + pathname, getCallback);
+        fs.readFile('test/testdata/sites' + pathname, (err, contents) => { getCallback(res, err, contents); });
       }
     }
   } else if (req.method === 'POST') {  //POST (index.html | loading.html)
@@ -35,7 +35,7 @@ exports.handleRequest = function (req, res) {
 
       req.on('end', () => {
         var decodedBody = querystring.parse(body);
-        helpers.serveAssets(res, 'test/testdata/sites/' + decodedBody.url, postCallback); //use input value in place of pathname
+        fs.access('test/testdata/sites/' + decodedBody.url, (err) => { postCallback(res, err, decodedBody.url); }); //use input value in place of pathname
       });
     
     } else {
@@ -45,20 +45,17 @@ exports.handleRequest = function (req, res) {
 };
 
 // helpers
-var postCallback = (res, err, contents) => {
+var postCallback = (res, err, sitename) => {
   if (err) {
-    //write to sites.txt
-    console.log('contents cb: ', contents);
-
-    fs.appendFile('test/testdata/sites.txt', contents, err => {
+    //append to sites.txt
+    fs.appendFile('test/testdata/sites.txt', sitename + '\n', err => {
       if (err) { throw error; }
       console.log('writeToFile succesful');
     });
 
     helpers.redirect(res, '/loading.html');
   } else {
-    helpers.redirect(res, contents);
-    res.writeHead(200);    
+    helpers.redirect(res, '/' + sitename);
   }
 };
 
