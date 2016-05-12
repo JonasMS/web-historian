@@ -1,5 +1,6 @@
 var path = require('path');
 var fs = require('fs');
+var url = require('url');
 var archive = require('../helpers/archive-helpers');
 
 exports.docRoot = 'web/public';
@@ -35,6 +36,9 @@ exports.serveAssets = function(res, asset, callback) {
   // (Static files are things like html (yours or archived from others...),
   // css, or anything that doesn't change often.)
   fs.readFile(asset, (err, contents) => {
+    contents = contents || url.parse(asset).pathname.replace(/test\/testdata\/sites\//, '');
+
+    console.log('contents help: ', contents, asset);
     callback(res, err, contents);
   });
 };

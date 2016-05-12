@@ -3,6 +3,7 @@ var path = require('path');
 var fs = require('fs');
 var archive = require('../helpers/archive-helpers');
 var helpers = require('./http-helpers');
+var querystring = require ('querystring');
 // require more modules/folders here!
 exports.handleRequest = function (req, res) {
   console.log(`${req.method} ${req.url}`);
@@ -25,10 +26,21 @@ exports.handleRequest = function (req, res) {
     }
   } else if (req.method === 'POST') {  //POST (index.html | loading.html)
     if (pathname === '/index.html' || pathname === '/loading.html') {
-      // 
+      //get input value
+      var body = '';
+
+      req.on('data', chunk => {
+        body += chunk.toString();
+      }); 
+
+      req.on('end', () => {
+        var decodedBody = querystring.parse(body);
+        helpers.serveAssets(res, 'test/testdata/sites/' + decodedBody.url, postCallback); //use input value in place of pathname
+      });
+    
+    } else {
+      helpers.notImplemented(res);
     }
-  } else {
-    helpers.notImplemented(res);
   }
 };
 
@@ -36,9 +48,16 @@ exports.handleRequest = function (req, res) {
 var postCallback = (res, err, contents) => {
   if (err) {
     //write to sites.txt
+    console.log('contents cb: ', contents);
+
+    fs.appendFile('test/testdata/sites.txt', contents, err => {
+      if (err) { throw error; }
+      console.log('writeToFile succesful');
+    });
+
     helpers.redirect(res, '/loading.html');
   } else {
-    helpers.redirect(res, filename);
+    helpers.redirect(res, contents);
     res.writeHead(200);    
   }
 };
@@ -51,3 +70,5 @@ var getCallback = (res, err, contents) => {
     res.end(contents);
   }
 };
+
+
