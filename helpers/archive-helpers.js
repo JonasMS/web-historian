@@ -34,20 +34,19 @@ exports.readListOfUrls = function(callback) {
 };
 
 exports.isUrlInList = function(url, callback) {
-  callback(true);
+  exports.readListOfUrls( (list) => {
+    callback(list.indexOf(url) !== -1);
+  });
 };
 
 exports.addUrlToList = function(url, callback) {
-  callback();
+  fs.appendFile('test/testdata/sites.txt', url + '\n', callback);
 };
 
 exports.isUrlArchived = function(url, callback) {
-  //get array of archived files from archive dir
   fs.readdir(path.join(__dirname, '../test/testdata/'), (err, contents) => {
-    // list.filter( sitename => contents.indexOf(sitename) === -1) 
-    callback(true);
+    callback(contents.indexOf(url) !== -1);
   });
-  //filter 'list'
 };
 
 exports.downloadUrls = function(urlArray) {
