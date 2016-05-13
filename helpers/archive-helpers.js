@@ -3,6 +3,8 @@ var path = require('path');
 var _ = require('underscore');
 var http = require('http');
 var querystring = require ('querystring');
+var Promise = require('bluebird');
+var request = require('request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -27,42 +29,84 @@ exports.initialize = function(pathsObj) {
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function(callback) {
-  fs.readFile(path.join(__dirname, '../test/testdata/sites.txt'), (err, contents) => {
-    var list = contents.toString().split('\n');
-    if (list[list.length - 1] === '') { list.pop(); }
-    callback(list);
+exports.readListOfUrls = function() {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path.join(__dirname, '../test/testdata/sites.txt'), (err, contents) => {
+      if (err) { 
+        reject(err); 
+      } else {
+        var list = contents.toString().split('\n');
+        if (list[list.length - 1] === '') { list.pop(); }
+        resolve(list);        
+      }
+    });
   });
 };
 
-exports.isUrlInList = function(url, callback) {
-  exports.readListOfUrls( (list) => {
-    callback(list.indexOf(url) !== -1);
+exports.isUrlInList = function(url) {
+  return new Promise((resolve, reject) => { 
+    exports.readListOfUrls( (list) => {
+      resolve(list.indexOf(url) !== -1);
+    });
   });
 };
 
-exports.addUrlToList = function(url, callback) {
-  fs.appendFile('test/testdata/sites.txt', url + '\n', callback);
+exports.addUrlToList = function(url) {
+  return new Promise((resolve, reject) => {
+    fs.appendFile('test/testdata/sites.txt', url + '\n', err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 };
 
-exports.isUrlArchived = function(url, callback) {
-  fs.readdir(path.join(__dirname, '../test/testdata/'), (err, contents) => {
-    callback(contents.indexOf(url) !== -1);
+exports.isUrlArchived = function(url) {
+  return new Promise((resolve, reject) => {
+    fs.readdir(path.join(__dirname, '../test/testdata/sites'), (err, contents) => {
+      if (err) { 
+        reject(err); 
+      } else {
+        resolve(contents.indexOf(url) !== -1);
+      }
+    });
   });
 };
 
 exports.downloadUrls = function(urlArray) {
-  urlArray.forEach(function(url) {
-    http.get('http://' + url, res => {
-      var body = '';
-
-      res.on('data', chunk => {
-        body += chunk.toString();
-      });
-
-      res.on('end', chunk => {
-        fs.writeFile(path.join(__dirname, '../test/testdata/sites/' + url), body, 'utf8', err => { if (err) { throw err; } });
+  return new Promise((resolve, reject) => {
+    urlArray.forEach(function(url) {
+      request('http://' + url, (err, res, body) => {
+        if (err) {
+          reject(err);
+        } else {
+          fs.writeFile(path.join(__dirname, '../test/testdata/sites/' + url), body, 'utf8', err => { 
+            if (err) {
+              reject(err); 
+            } else {
+              resolve();
+            }
+          });
+        }
       });
     });
   });
 };
+
+exports.cleanList = function() {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(path.join(__dirname, '../test/testdata/sites.txt'), '', err => {
+      if (err) {
+        reject(err);
+      } else { resolve(); }
+    });
+  });
+};
+
+
+
+
+
+
