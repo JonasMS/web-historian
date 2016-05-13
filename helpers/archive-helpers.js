@@ -5,6 +5,8 @@ var http = require('http');
 var querystring = require ('querystring');
 var Promise = require('bluebird');
 var request = require('request');
+var redis = require('redis');
+var client = redis.createClient();
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -53,13 +55,18 @@ exports.isUrlInList = function(url) {
 
 exports.addUrlToList = function(url) {
   return new Promise((resolve, reject) => {
-    fs.appendFile('test/testdata/sites.txt', url + '\n', err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
+    try {
+      client.hset('urls', url, Date());
+      resolve();
+    } catch (err) { reject(err); }
+
+    // fs.appendFile('test/testdata/sites.txt', url + '\n', err => {
+    //   if (err) {
+    //     reject(err);
+    //   } else {
+    //     resolve();
+    //   }
+    // });
   });
 };
 

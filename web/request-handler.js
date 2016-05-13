@@ -48,10 +48,14 @@ exports.handleRequest = function (req, res) {
 var postCallback = (res, err, sitename) => {
   if (err) {
     //append to sites.txt
+    archive.addUrlToList(sitename)
+    .then(helpers.redirect(res, '/loading.html'))
+    .catch(err => console.log(err));
+
     fs.appendFile('test/testdata/sites.txt', sitename + '\n', err => {
       if (err) { throw error; }
       console.log('writeToFile succesful');
-      helpers.redirect(res, '/loading.html');
+      // helpers.redirect(res, '/loading.html');
     });
   } else {
     helpers.redirect(res, '/' + sitename);
